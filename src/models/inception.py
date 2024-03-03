@@ -206,6 +206,18 @@ class Inception(nn.Module):
             nn.Linear(1024, num_classes)
         )
 
+        self.apply(self._init_weights)
+    
+    def _init_weights(self, m) -> None:
+        """
+        Initialize the weights of the model.
+        """
+
+        if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+            nn.init.kaiming_normal_(self.weight, mode='fan_out', nonlinearity='relu')
+            if self.bias is not None:
+                nn.init.constant_(self.bias, 0)
+
     def forward(self,
                 x: torch.Tensor) -> torch.Tensor:
         """
