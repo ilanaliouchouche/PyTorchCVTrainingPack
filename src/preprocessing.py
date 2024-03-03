@@ -17,6 +17,17 @@ class FakeDetectorPreprocessor:
     """
     Class for preprocessing the data for the FakeDetector model.
     """
+
+    path: str
+    image_size: int
+    SEED: int
+    normalize: bool
+    train_transforms: transforms.Compose
+    test_transforms: transforms.Compose
+    train_loader: DataLoader
+    val_loader: DataLoader
+    test_loader: DataLoader
+    __processed: bool
     
     def __init__(self, path: str, 
                  image_size: int = 224,
@@ -32,6 +43,8 @@ class FakeDetectorPreprocessor:
             SEED (int): Seed for the random number generator.
             normalize (bool): Whether to normalize the data.
         """
+
+        self.__processed = False
 
         if not normalize:
             
@@ -149,6 +162,9 @@ class FakeDetectorPreprocessor:
         Args:
             n_workers (int): Number of workers for the DataLoaders.
         """
+        if self.__processed:
+            warnings.warn('You will overwrite the processed data.')
+
 
         dataset = ImageFolder(root=self.path, transform=self.train_transforms)
 
@@ -185,4 +201,6 @@ class FakeDetectorPreprocessor:
             self.train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=n_workers)
 
         self.val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=n_workers)
-        self.test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=n_workers)        
+        self.test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=n_workers)  
+
+        self.__processed = True      
