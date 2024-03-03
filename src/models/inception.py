@@ -211,6 +211,9 @@ class Inception(nn.Module):
     def _init_weights(self, m) -> None:
         """
         Initialize the weights of the model.
+
+        Args:
+            m (nn.Module): Module of the model.
         """
 
         if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
