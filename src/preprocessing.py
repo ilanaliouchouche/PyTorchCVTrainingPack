@@ -125,7 +125,7 @@ class FakeDetectorPreprocessor:
                              
         
     def __compute_statistics(self, 
-                           dataset : ImageFolder) -> Tuple[torch.Tensor, torch.Tensor]:
+                             dataset : ImageFolder) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Compute the mean and standard deviation of the dataset.
 
