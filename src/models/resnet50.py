@@ -92,6 +92,9 @@ class ResNet50(nn.Module):
             torch.Tensor: Output of the ResNet50 model.
         """
 
+        if x.shape[2] != 224 or x.shape[3] != 224:
+            raise ValueError(f"Input tensor must have shape (N, C, 224, 224) but got {x.shape}")
+
         x = self.conv1(x)
         for layer in self.layers:
             x = layer(x)
