@@ -33,7 +33,7 @@ class InceptionModule(nn.Module):
             out_pool_channels (int): Number of output channels for the 1x1 convolution after max pooling.
         """
 
-        super(InceptionModule, self).__init__()
+        super().__init__()
 
         self.conv_1x1 = nn.Sequential(
             nn.Conv2d(in_channels, out_1x1_channels, kernel_size=1),
@@ -104,7 +104,7 @@ class InceptionAuxiliaryClassifier(nn.Module):
             num_classes (int): Number of classes for the classification task.
         """
 
-        super(InceptionAuxiliaryClassifier, self).__init__()
+        super().__init__()
 
         self.pool = nn.AvgPool2d(kernel_size=5, stride=3)
         self.conv = nn.Conv2d(in_channels, 128, kernel_size=1)
@@ -156,18 +156,18 @@ class Inception(nn.Module):
     auxiliary_classifier2: InceptionAuxiliaryClassifier
     classifier: nn.Sequential
 
-    def __init__(self, 
-                 in_channels: int, 
-                 num_classes: int) -> None:
+    def __init__(self,  
+                 num_classes: int,
+                 in_channels: int = 3) -> None:
         """
         Constructor for the Inception class.
 
         Args:
-            in_channels (int): Number of input channels.
             num_classes (int): Number of classes for the classification task.
+            in_channels (int): Number of input channels.
         """
 
-        super(Inception, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, 64, kernel_size=7, stride=2, padding=3),
@@ -268,7 +268,7 @@ class BinaryInceptionLoss(nn.BCEWithLogitsLoss):
         Constructor for the BinaryInceptionLoss class.
         """
 
-        super(BinaryInceptionLoss, self).__init__()
+        super().__init__()
 
     def forward(self, 
                 input: Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
@@ -293,3 +293,4 @@ class BinaryInceptionLoss(nn.BCEWithLogitsLoss):
         loss_main = super().forward(out_main, target)
 
         return 0.3 * loss_aux1 + 0.3 * loss_aux2 + loss_main
+    

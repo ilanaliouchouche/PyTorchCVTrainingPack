@@ -14,20 +14,22 @@ class ResNet50(nn.Module):
     fc: nn.Sequential
 
     def __init__(self, 
-                 num_classes: int) -> None:
+                 num_classes: int,
+                 in_channels: int = 3) -> None:
         """
         Constructor for the ResNet50 class.
 
         Args:
             num_classes (int): Number of classes in the dataset.
+            in_channels (int): Number of input channels.
         """
 
-        super(ResNet50, self).__init__()
+        super().__init__()
 
-        self.in_channels = 64
+        self.res_in_channels = 64
 
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.Conv2d(in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -63,16 +65,16 @@ class ResNet50(nn.Module):
         """
 
         downsample = None
-        if stride != 1 or out_channels * ResBlock.expansion != self.in_channels:
+        if stride != 1 or out_channels * ResBlock.expansion != self.res_in_channels:
             downsample = nn.Sequential(
-                nn.Conv2d(self.in_channels, out_channels * ResBlock.expansion, kernel_size=1, stride=stride, bias=False),
+                nn.Conv2d(self.res_in_channels, out_channels * ResBlock.expansion, kernel_size=1, stride=stride, bias=False),
                 nn.BatchNorm2d(out_channels * ResBlock.expansion),
             )
 
-        init_layer = ResBlock(self.in_channels, out_channels, stride, downsample)
-        self.in_channels = out_channels * ResBlock.expansion
+        init_layer = ResBlock(self.res_in_channels, out_channels, stride, downsample)
+        self.res_in_channels = out_channels * ResBlock.expansion
 
-        layers = reduce(lambda acc, _: acc + [ResBlock(self.in_channels, out_channels)], 
+        layers = reduce(lambda acc, _: acc + [ResBlock(self.res_in_channels, out_channels)], 
                         range(1, blocks), 
                         [init_layer])
 
@@ -127,7 +129,7 @@ class ResBlock(nn.Module):
             downsample (Optional[nn.Module]): Downsample layer.
         """
 
-        super(ResBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=1, bias=False),
@@ -174,6 +176,3 @@ class ResBlock(nn.Module):
         out = self.relu(out)  
 
         return out
-
-
-
