@@ -29,7 +29,8 @@ class FakeDetectorPreprocessor:
     test_loader: DataLoader
     __processed: bool
     
-    def __init__(self, path: str, 
+    def __init__(self, 
+                 path: str, 
                  image_size: int = 224,
                  SEED: int = 42,
                  normalize: bool = True) -> None:
