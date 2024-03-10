@@ -392,4 +392,3 @@ class FakeDetectorTrainer:
             handle.remove()
         self.handles = {}
         self.gradients = {}
-
