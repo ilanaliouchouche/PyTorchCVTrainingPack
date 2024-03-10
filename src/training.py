@@ -1,5 +1,5 @@
 import datetime
-from typing import Optional, Union
+from typing import Callable, List, Optional, Union
 import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
@@ -54,9 +54,11 @@ class FakeDetectorTrainer:
         self.train_loader = None
         self.val_loader = None
         self.writer = None
+        self.handles = {}
         self.losses = []
         self.val_losses = []
         self.total_epochs = 0
+        self.gradients = {}
 
     def to(self,
            device: str) -> None:
@@ -313,7 +315,59 @@ class FakeDetectorTrainer:
         
         if self.writer:
             self.writer.add_graph(self.model, next(iter(self.train_loader))[0].to(self.device))
-            
-
     
+
+    def hook_gradients(self,
+                       layers: List[str]) -> None:
+        """
+        Hook the gradients of the specified layers.
+
+        Args:
+            layers: List of layers to hook
+        """
+
+        modules = list(self.model.named_modules())
+
+        def make_log_fn(name: str, 
+                        id: str) -> Callable[[torch.Tensor], None]:
+            """
+            Make a log function.
+
+            Args:
+                name: Name of the layer
+                id: ID of the parameter
+
+            Returns:
+                Callable: Log function
+            """
+
+            def log_fn(grad: torch.Tensor) -> None:
+                """
+                Log the gradient.
+                
+                Args:
+                    grad: Gradient
+                """
+
+                self.gradients[name][id].append(grad)
+
+            return log_fn
+        
+        for name, module in modules:
+            if name in layers:
+                self.gradients[name] = {}
+                for id, param in module.named_parameters():
+                    self.gradients[name][id] = []
+                    log_fn = make_log_fn(name, id)
+                    self.handles[f"{name}_{id}_grad"] = param.register_hook(log_fn)
+    
+    def unhook(self) -> None:
+        """
+        Unhook hook functions.
+        """
+
+        for handle in self.handles.values():
+            handle.remove()
+        self.handles = {}
+        self.gradients = {}
 
