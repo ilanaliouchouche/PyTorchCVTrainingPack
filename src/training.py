@@ -5,6 +5,7 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
 from utils.logger_config import get_logger
 from src.models.inception import BinaryInceptionLoss
+from tqdm.auto import tqdm
 
 logger = get_logger()
 
@@ -235,7 +236,9 @@ class FakeDetectorTrainer:
 
         self.set_seed(seed)
         
-        for epoch in range(n_epochs):
+        logger.info(f"Training for {n_epochs} epochs. {self.total_epochs} epochs have already been trained.")
+
+        for epoch in tqdm(range(n_epochs)):
             self.total_epochs += 1
 
             train_loss = self._mini_batch()
@@ -251,6 +254,8 @@ class FakeDetectorTrainer:
                     scalars["loss/val"] = val_loss
                 self.writer.add_scalars("loss", scalars, epoch)
         
+        logger.info(f"Training completed. {n_epochs} epochs trained. Total epochs trained: {self.total_epochs}")
+
         if self.writer:
             self.writer.flush()
 
@@ -268,7 +273,8 @@ class FakeDetectorTrainer:
             "optimizer": self.optimizer.state_dict(),
             "total_epochs": self.total_epochs,
             "losses": self.losses,
-            "val_losses": self.val_losses
+            "val_losses": self.val_losses,
+            "date": datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         }
 
         torch.save(checkpoint, path)
@@ -283,7 +289,7 @@ class FakeDetectorTrainer:
         Args:
             path: Path to load the model
         """
-    
+
         checkpoint = torch.load(path)
 
         self.model.load_state_dict(checkpoint["model"])
@@ -291,6 +297,8 @@ class FakeDetectorTrainer:
         self.total_epochs = checkpoint["total_epochs"]
         self.losses = checkpoint["losses"]
         self.val_losses = checkpoint["val_losses"]
+
+        logger.info(f"Model loaded from {path}. Model last training date: {checkpoint['date']}")
 
         if eval_mode:
             self.model.eval()
@@ -309,10 +317,12 @@ class FakeDetectorTrainer:
         Returns:
             torch.Tensor: Output of the model
         """
-    
+
+        logger.info("Predicting the output of the model.")
         self.model.eval()
         with torch.inference_mode():
             x = x.to(self.device)
+            logger.info("Prediction completed.")
             return self.model(x)
         
     def add_graph(self) -> None:
@@ -320,13 +330,14 @@ class FakeDetectorTrainer:
         Add the graph to tensorboard.
         """
         
+        logger.info("Adding graph to tensorboard.")
         if self.train_loader is None:
             logger.warning("Train loader not found. Cannot add graph to tensorboard.")
             return
         
         if self.writer:
+            logger.info("Graph added to tensorboard.")
             self.writer.add_graph(self.model, next(iter(self.train_loader))[0].to(self.device))
-    
 
     def hook_gradients(self,
                        layers: List[str]) -> None:
