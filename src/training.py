@@ -371,7 +371,7 @@ class FakeDetectorTrainer:
                     grad: Gradient
                 """
 
-                self.gradients[name][id].append(grad)
+                self.gradients[name][id].append(grad.tolist())
 
             return log_fn
         
