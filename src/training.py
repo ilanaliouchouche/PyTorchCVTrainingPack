@@ -1,5 +1,5 @@
 import datetime
-from typing import Callable, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 import torch
 import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter
@@ -23,15 +23,16 @@ class FakeDetectorTrainer:
     train_loader: torch.utils.data.DataLoader
     val_loader: Optional[torch.utils.data.DataLoader]
     writer: Optional[SummaryWriter]
-    losses: list
-    val_losses: list
+    losses: List
+    val_losses: List
     total_epochs: int
+    gradients: Dict
 
     def __init__(self,
                  model: nn.Module,
                  optimizer: torch.optim.Optimizer,
                  train_loss_fn: torch.nn.modules.loss.BCEWithLogitsLoss,
-                 val_loss_fn: Union[torch.nn.modules.loss.BCEWithLogitsLoss, BinaryInceptionLoss]) -> None:
+                 val_loss_fn: Optional[Union[torch.nn.modules.loss.BCEWithLogitsLoss, BinaryInceptionLoss]]) -> None:
         """
         Constructor for the FakeDetectorTrainer class.
 
@@ -104,7 +105,17 @@ class FakeDetectorTrainer:
 
         self.train_loader = train_loader
         self.val_loader = val_loader
-    
+
+        if self.val_loader is not None and self.val_loss_fn is None:
+            raise ValueError("Validation loss function not found.")
+        
+        if self.val_loader is None and self.val_loss_fn is not None:
+            logger.warning("Validation loader not found. Validation loss function will not be used.")
+        
+        if len(train_loader.dataset.dataset.classes) != self.n_labels + 1:
+            raise ValueError(f"Number of labels in the dataset ({len(train_loader.dataset.dataset.classes)})"
+                             f"does not match the number of labels in the model ({self.n_labels + 1}).")
+          
     def set_tensorboard(self,
                         name: str,
                         log_dir: str = "runs") -> None:
