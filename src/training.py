@@ -302,7 +302,7 @@ class FakeDetectorTrainer:
             x = x.to(self.device)
             return self.model(x)
         
-    def add_grap(self) -> None:
+    def add_graph(self) -> None:
         """
         Add the graph to tensorboard.
         """
