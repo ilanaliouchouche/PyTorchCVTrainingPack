@@ -9,9 +9,9 @@ from tqdm.auto import tqdm
 
 logger = get_logger()
 
-class FakeDetectorTrainer:
+class CVTrainer:
     """
-    Class for training the FakeDetector model.
+    Class for training a PyTorch Net.
     """
 
     model: nn.Module
@@ -35,7 +35,7 @@ class FakeDetectorTrainer:
                  train_loss_fn: torch.nn.modules.loss.BCEWithLogitsLoss,
                  val_loss_fn: Optional[Union[torch.nn.modules.loss.BCEWithLogitsLoss, BinaryInceptionLoss]]) -> None:
         """
-        Constructor for the FakeDetectorTrainer class.
+        Constructor for the CVTrainer class.
 
         Args:
             model: FakeDetector model
