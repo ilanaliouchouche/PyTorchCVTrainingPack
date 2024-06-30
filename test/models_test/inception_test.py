@@ -1,5 +1,5 @@
 import torch
-from src.preprocessing import FakeDetectorPreprocessor
+from src.preprocessing import CVPreprocessor
 from src.models.inception import Inception, BinaryInceptionLoss
 from pathlib import Path
 
@@ -9,7 +9,7 @@ DATA_PATH = project_root / "data"
 
 DATA_PATH = str(DATA_PATH)
 
-preprocessor = FakeDetectorPreprocessor(DATA_PATH)
+preprocessor = CVPreprocessor(DATA_PATH)
 preprocessor.prepare_data()
 
 test_batch_images, test_batch_labels = next(iter(preprocessor.train_loader))
