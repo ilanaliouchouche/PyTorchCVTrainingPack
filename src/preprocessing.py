@@ -13,9 +13,9 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-class FakeDetectorPreprocessor:
+class CVPreprocessor:
     """
-    Class for preprocessing the data for the FakeDetector model.
+    Class for preprocessing the data for a CV NN.
     """
 
     path: str
@@ -36,7 +36,7 @@ class FakeDetectorPreprocessor:
                  normalize: bool = True) -> None:
         
         """
-        Constructor for the FakeDetectorPreprocessor class.
+        Constructor for the CVPreprocessor class.
 
         Args:
             path (str): Path to the dataset.
