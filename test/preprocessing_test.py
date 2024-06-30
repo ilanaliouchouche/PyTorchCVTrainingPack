@@ -1,4 +1,4 @@
-from src.preprocessing import FakeDetectorPreprocessor
+from src.preprocessing import CVPreprocessor
 from pathlib import Path
 import torch
 from torchvision.datasets import ImageFolder
@@ -10,14 +10,14 @@ DATA_PATH = project_root / "data"
 DATA_PATH = str(DATA_PATH)
 
 
-def test_fake_detector_preprocessor_prepare_data():
+def test_cv_preprocessor_prepare_data():
     """
     Test the `prepare_data` method of the `FakeDetectorPreprocessor` class:
         1. Check the type of the `train_loader` attribute.
         2. Check the type of the `val_loader` attribute.
         3. Check the type of the `test_loader` attribute.
     """
-    preprocessor = FakeDetectorPreprocessor(DATA_PATH)
+    preprocessor = CVPreprocessor(DATA_PATH)
     preprocessor.prepare_data()
 
     assert type(preprocessor.train_loader) == torch.utils.data.dataloader.DataLoader
