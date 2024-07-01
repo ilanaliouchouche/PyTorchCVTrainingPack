@@ -14,6 +14,23 @@ class CVTrainer:
     Class for training a PyTorch Net.
     """
 
+    model: nn.Module
+    optimizer: torch.optim.Optimizer
+    train_loss_fn: torch.nn.modules.loss.BCEWithLogitsLoss
+    val_loss_fn: Optional[Union[torch.nn.modules.loss.BCEWithLogitsLoss, BinaryInceptionLoss]]
+    n_labels: int
+    train_step: Callable[[torch.Tensor, torch.Tensor], float]
+    val_step: Callable[[torch.Tensor, torch.Tensor], float]
+    train_loader: Optional[torch.utils.data.DataLoader]
+    val_loader: Optional[torch.utils.data.DataLoader]
+    writer: Optional[SummaryWriter]
+    handles: Dict[str, torch.utils.hooks.RemovableHandle]
+    losses: List[float]
+    val_losses: List[float]
+    total_epochs: int
+    gradients: Dict[str, Dict[str, List[float]]]
+    device: str
+
     def __init__(self,
                  model: nn.Module,
                  optimizer: torch.optim.Optimizer,
