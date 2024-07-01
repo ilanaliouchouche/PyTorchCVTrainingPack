@@ -14,26 +14,11 @@ class CVTrainer:
     Class for training a PyTorch Net.
     """
 
-    model: nn.Module
-    optimizer: torch.optim.Optimizer
-    train_loss_fn: torch.nn.modules.loss.BCEWithLogitsLoss
-    val_loss_fn: Union[torch.nn.modules.loss.BCEWithLogitsLoss, BinaryInceptionLoss]
-    n_labels: int
-    train_step: float
-    val_step: float
-    train_loader: torch.utils.data.DataLoader
-    val_loader: Optional[torch.utils.data.DataLoader]
-    writer: Optional[SummaryWriter]
-    losses: List
-    val_losses: List
-    total_epochs: int
-    gradients: Dict
-
     def __init__(self,
                  model: nn.Module,
                  optimizer: torch.optim.Optimizer,
                  train_loss_fn: torch.nn.modules.loss.BCEWithLogitsLoss,
-                 val_loss_fn: Optional[Union[torch.nn.modules.loss.BCEWithLogitsLoss, BinaryInceptionLoss]]) -> None:
+                 val_loss_fn: Optional[Union[torch.nn.modules.loss.BCEWithLogitsLoss, BinaryInceptionLoss]] = None) -> None:
         """
         Constructor for the CVTrainer class.
 
@@ -52,7 +37,7 @@ class CVTrainer:
         self.train_step = self._make_train_step()
         self.val_step = self._make_val_step()
 
-        # placeholders
+        # Placeholders
         self.train_loader = None
         self.val_loader = None
         self.writer = None
@@ -61,9 +46,9 @@ class CVTrainer:
         self.val_losses = []
         self.total_epochs = 0
         self.gradients = {}
+        self.device = 'cpu'
 
-    def to(self,
-           device: str) -> None:
+    def to(self, device: str) -> None:
         """
         Set the device for training.
 
@@ -131,8 +116,7 @@ class CVTrainer:
         suffix = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         self.writer = SummaryWriter(log_dir=f"{log_dir}/{name}_{suffix}")
 
-    
-    def _make_train_step(self) -> float:
+    def _make_train_step(self) -> Callable[[torch.Tensor, torch.Tensor], float]:
         """
         Make a train step.
 
@@ -163,7 +147,7 @@ class CVTrainer:
 
         return train_step
     
-    def _make_val_step(self) -> float:
+    def _make_val_step(self) -> Callable[[torch.Tensor, torch.Tensor], float]:
         """
         Make a validation step.
 
@@ -184,16 +168,14 @@ class CVTrainer:
                 float: Loss
             """
 
-            self.model.eval()
-            with torch.no_grad():
-                yhat = self.model(x)
-                loss = self.val_loss_fn(yhat, y)
-                return loss.item()
+            yhat = self.model(x)
+            loss = self.val_loss_fn(yhat, y)
+            return loss.item()
 
         return val_step
 
     def _mini_batch(self,
-                    validation: bool = False) -> float:
+                    validation: bool = False) -> Optional[float]:
         """
         Loop over the mini batches and compute the loss.
 
@@ -218,7 +200,6 @@ class CVTrainer:
         mini_batch_loss = 0.0
         for x, y in data_loader:
             x, y = x.to(self.device), y.to(self.device)
-
             mini_batch_loss += step(x, y)
         
         return mini_batch_loss / len(data_loader)
@@ -241,16 +222,18 @@ class CVTrainer:
         for epoch in tqdm(range(n_epochs)):
             self.total_epochs += 1
 
+            model.train()
             train_loss = self._mini_batch()
             self.losses.append(train_loss)
 
+            model.eval()
             with torch.inference_mode():
                 val_loss = self._mini_batch(validation=True)
                 self.val_losses.append(val_loss)
 
             if self.writer:
                 scalars = {"loss/train": train_loss}
-                if val_loss:
+                if val_loss is not None:
                     scalars["loss/val"] = val_loss
                 self.writer.add_scalars("loss", scalars, epoch)
         
@@ -279,7 +262,6 @@ class CVTrainer:
 
         torch.save(checkpoint, path)
     
-
     def load_model(self,
                    path: str,
                    eval_mode: bool = False) -> None:
@@ -304,7 +286,6 @@ class CVTrainer:
             self.model.eval()
         else:
             self.model.train()
-        
     
     def predict(self,
                 x: torch.Tensor) -> torch.Tensor:
